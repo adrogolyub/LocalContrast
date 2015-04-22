@@ -9,6 +9,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
     setupUi(this);
+    _enhancer = new LocalContrastEnhancer(this);
+    qRegisterMetaType<cv::Mat>("cv::Mat&");
+    connect(_enhancer, &LocalContrastEnhancer::resultReady, this, &MainWindow::onResultReceived);
+    connect(forceSlider, &QSlider::valueChanged, this, &MainWindow::updateImage);
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -19,4 +23,14 @@ void MainWindow::on_actionOpen_triggered()
     _image = imread(fileName.toLatin1().data(), IMREAD_UNCHANGED);
     qDebug() << _image.channels();
     imageLeft->setPixmap(Utils::matToPixmap(_image));
+}
+
+void MainWindow::updateImage()
+{
+    _enhancer->doWork(_image, forceSlider->value() / (float)forceSlider->maximum());
+}
+
+void MainWindow::onResultReceived(Mat &res)
+{
+    imageRight->setPixmap(Utils::matToPixmap(res));
 }

@@ -14,7 +14,7 @@ public:
     explicit LocalContrastEnhancer(QObject *parent = 0) {}
     void doWork(cv::Mat &image, float force);
 signals:
-    void resultReady(cv::Mat);
+    void resultReady(cv::Mat&);
 };
 
 #endif // LOCALCONTRASTENHANCER_H
