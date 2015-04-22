@@ -4,18 +4,25 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       = core gui
 
+include(opencv.pri)
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+
+message($$LIBS))
 TARGET = LocalContrast
 TEMPLATE = app
-
+QTPLUGIN     += qjpeg qpng qbmp
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    localcontrastenhancer.cpp \
+    utils.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    localcontrastenhancer.h \
+    utils.h
 
 FORMS    += mainwindow.ui
 
