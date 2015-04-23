@@ -1,5 +1,6 @@
 #include "localcontrastenhancer.h"
 #include <omp.h>
+#include <QDebug>
 using namespace cv;
 
 #define TILE_XCOUNT 8
@@ -60,6 +61,8 @@ void calcMap(const Mat &m, uchar *map)
         map[i] = (uchar)(float(cdf[i] - cdf[minColor]) / (N - cdf[minColor]) * 255 + 0.5f);
 }
 
+
+
 Mat LocalContrastEnhancer::processAdaptive()
 {
     uchar map[256 * TILE_XCOUNT * TILE_YCOUNT];
@@ -68,13 +71,21 @@ Mat LocalContrastEnhancer::processAdaptive()
     int dx = (_image.cols / TILE_XCOUNT - 1) / 2;
     int dy = (_image.rows / TILE_YCOUNT - 1) / 2;
     int tile = 0; // current tile
-    for (int x = dx + 1; x < _image.cols; x += 2 * dx) {
-        for (int y = dy + 1; y < _image.rows; y += 2 * dy) {
-
+    for (int x = dx + 1; x < _image.cols - dx; x += 2 * dx) {
+        for (int y = dy + 1; y < _image.rows - dy; y += 2 * dy) {
+            Rect r(x - dx, y - dy, 2 * dx + 1, 2 * dy + 1);
+            Mat m = _image(r);
+            uchar *pmap = map + tile * 256;
+			calcMap(m, pmap);
+            tile++;
         }
     }
-    Mat result = _image.clone();
+    Mat result;// = _image.clone();
     uchar *data = result.data;
+
+    copyMakeBorder(_image, result, dy, dy, dx, dx, BORDER_REFLECT101 | BORDER_ISOLATED);
+    qDebug() << dx << dy;
+    //copyMakeBorder(_image, result, 79, 79, 59, 59, BORDER_REFLECT101 | BORDER_ISOLATED);
     return result;
 }
 

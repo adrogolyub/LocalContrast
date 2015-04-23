@@ -29,7 +29,6 @@ void MainWindow::on_actionOpen_triggered()
     if (fileName.isEmpty())
         return;
     _image = imread(fileName.toLatin1().data(), IMREAD_GRAYSCALE);
-    qDebug() << _image.channels();
     imageLeft->setPixmap(Utils::matToPixmap(_image));
     updateImage();
 }
@@ -46,4 +45,5 @@ void MainWindow::onResultReceived(Mat &res)
     long long elapsed =  duration_cast<milliseconds>(steady_clock::now() - _time).count();
     QMainWindow::statusBar()->showMessage(QString("%1 msec").arg(elapsed));
     imageRight->setPixmap(Utils::matToPixmap(res));
+    //imshow("1",res);
 }

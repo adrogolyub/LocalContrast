@@ -1,15 +1,16 @@
 #include "utils.h"
+#include <QDebug>
 
 using namespace cv;
 
 QPixmap Utils::matToPixmap(Mat &img)
 {
-    Mat mat = img.clone();
-    if (mat.channels() == 1)
-        cvtColor(mat, mat, COLOR_GRAY2RGB);
-    else if (mat.channels() == 4)
-        cvtColor(mat, mat, COLOR_BGRA2RGB);
+    Mat mat;
+    if (img.channels() == 1)
+        cvtColor(img, mat, COLOR_GRAY2RGBA);
+    else if (img.channels() == 4)
+        cvtColor(img, mat, COLOR_BGRA2RGBA);
     else
-        cvtColor(mat, mat, COLOR_BGR2RGB);
-    return QPixmap::fromImage(QImage((unsigned char*) mat.data, mat.cols, mat.rows, QImage::Format_RGB888));
+        cvtColor(img, mat, COLOR_BGR2RGBA);
+    return QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, QImage::Format_ARGB32));
 }
