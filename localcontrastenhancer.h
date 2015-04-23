@@ -7,12 +7,19 @@
 class LocalContrastEnhancer : public QThread
 {
     Q_OBJECT
-    float _force;
-    cv::Mat _image;
-    void run() Q_DECL_OVERRIDE;
 public:
+    enum Mode { Uniform = 1, AHE };
     explicit LocalContrastEnhancer(QObject *parent = 0) {}
     void doWork(cv::Mat &image, float force);
+    void setMode(Mode);
+protected:
+    cv::Mat processAdaptive();
+    cv::Mat processUniform();
+
+    float _force;
+    cv::Mat _image;
+    Mode _mode;
+    void run() Q_DECL_OVERRIDE;
 signals:
     void resultReady(cv::Mat&);
 };
