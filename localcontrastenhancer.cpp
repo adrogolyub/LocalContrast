@@ -20,6 +20,14 @@ void LocalContrastEnhancer::setMode(LocalContrastEnhancer::Mode m)
     _mode = m;
 }
 
+Mat LocalContrastEnhancer::unsharpMask()
+{
+    Mat result;
+    GaussianBlur(_image, result, cv::Size(0, 0), 3);
+    addWeighted(_image, 1.0 + _force * 2, result, -_force * 2, 0, result);
+    return result;
+}
+
 void LocalContrastEnhancer::run()
 {
     Mat result;
@@ -29,6 +37,9 @@ void LocalContrastEnhancer::run()
         break;
     case CLAHE:
         result = processAdaptive(true);
+        break;
+    case UnsharpMask:
+        result = unsharpMask();
         break;
     default:
         result = processUniform();

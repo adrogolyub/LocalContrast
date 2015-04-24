@@ -17,11 +17,13 @@ private:
     LocalContrastEnhancer *_enhancer;
     cv::Mat _image;
     QButtonGroup *modeGroup;
+    QPixmap lastResult;
     void disableGUI(bool t = true);
 private slots:
     void onResultReceived(cv::Mat&);
     void updateImage();
     void on_actionOpen_triggered();
+    void on_actionSave_triggered();
 };
 
 #endif // MAINWINDOW_H

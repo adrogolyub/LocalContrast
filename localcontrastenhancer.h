@@ -9,13 +9,14 @@ class LocalContrastEnhancer : public QThread
 {
     Q_OBJECT
 public:
-    enum Mode { Uniform = 1, AHE, CLAHE };
+    enum Mode { Uniform = 1, AHE, CLAHE, UnsharpMask };
     explicit LocalContrastEnhancer(QObject *) {}
     void doWork(cv::Mat &image, float force);
     void setMode(Mode);
 protected:
 	uchar *map;
     QMutex _mutex;
+    cv::Mat unsharpMask();
     cv::Mat processAdaptive(bool limitContrast = false);
     cv::Mat processUniform();
 	int TILE_XCOUNT;

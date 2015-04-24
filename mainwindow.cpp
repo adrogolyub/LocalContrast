@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QStatusBar>
 #include <QButtonGroup>
+#include <QMessageBox>
 
 using namespace std::chrono;
 using namespace cv;
@@ -16,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     modeGroup->addButton(rbUniform, (int)(LocalContrastEnhancer::Uniform));
     modeGroup->addButton(rbAHE, (int)LocalContrastEnhancer::AHE);
     modeGroup->addButton(rbCLAHE, (int)LocalContrastEnhancer::CLAHE);
+    modeGroup->addButton(rbUS, (int)LocalContrastEnhancer::UnsharpMask);
     _enhancer = new LocalContrastEnhancer(this);
     qRegisterMetaType<cv::Mat>("cv::Mat&");
     connect(_enhancer, &LocalContrastEnhancer::resultReady, this, &MainWindow::onResultReceived);
@@ -32,8 +34,10 @@ void MainWindow::disableGUI(bool t)
         forceSlider->setFocus(); // because forceSlider loses focus after disabling
     rbAHE->setEnabled(!t);
     rbCLAHE->setEnabled(!t);
+    rbUS->setEnabled(!t);
     rbUniform->setEnabled(!t);
     actionOpen->setEnabled(!t);
+    actionSave->setEnabled(!t);
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -58,7 +62,19 @@ void MainWindow::updateImage()
 void MainWindow::onResultReceived(Mat &res)
 {
     long long elapsed =  duration_cast<milliseconds>(steady_clock::now() - _time).count();
-    QMainWindow::statusBar()->showMessage(QString("%1 msec").arg(elapsed));
-    imageRight->setPixmap(Utils::matToPixmap(res));
+    QMainWindow::statusBar()->showMessage(tr("%1 msec").arg(elapsed));
+    lastResult = Utils::matToPixmap(res);
+    imageRight->setPixmap(lastResult);
     disableGUI(false);
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    QString path = QFileDialog::getSaveFileName(this, tr("Save image"), QString(), tr("PNG Image (*.png)"));
+    if (!path.isEmpty()) {
+        if (lastResult.save(path))
+            QMessageBox::information(this, tr("Image saved"), tr("Image successfully saved."));
+        else
+            QMessageBox::critical(this, tr("Failure"), tr("Failed to save image."));
+    }
 }
