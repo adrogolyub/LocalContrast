@@ -40,7 +40,7 @@ void MainWindow::on_actionOpen_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open image"), QString(), tr("Images (*.png *.bmp *.jpg)"));
     if (fileName.isEmpty())
         return;
-    _image = imread(fileName.toLatin1().data(), IMREAD_GRAYSCALE);
+    _image = imread(fileName.toLatin1().data(), IMREAD_COLOR);
     imageLeft->setPixmap(Utils::matToPixmap(_image));
     updateImage();
 }

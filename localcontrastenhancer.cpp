@@ -32,7 +32,7 @@ void LocalContrastEnhancer::run()
         break;
     default:
         result = processUniform();
-    }
+    }    
     emit resultReady(result);
 }
 
@@ -67,6 +67,8 @@ Mat LocalContrastEnhancer::processAdaptive(bool limitContrast)
 
     result = _image.clone();
     uchar *data = (uchar*)result.data;
+    Mat I;
+    cvtColor(_image, I, COLOR_RGB2GRAY);
 #pragma omp parallel for
     for (int i = 0; i < w - 1; i++) {
         for (int j = 0; j < h - 1; j++) {
@@ -77,21 +79,32 @@ Mat LocalContrastEnhancer::processAdaptive(bool limitContrast)
             int ur = (idx + 1) * TILE_YCOUNT + idy;
             int bl = idx * TILE_YCOUNT + idy + 1;
             int br = (idx + 1) * TILE_YCOUNT + idy + 1;
-            uchar val = data[j * w + i];
-            uchar val_ul = map[256 * ul + val];
-            uchar val_ur = map[256 * ur + val];
-            uchar val_bl = map[256 * bl + val];
-            uchar val_br = map[256 * br + val];
-            float x1 = idx * tileWidth;
-            float y1 = idy * tileHeight;
-            float x2 = (idx + 1) * tileWidth;
-            float y2 = (idy + 1) * tileHeight;
-            val = 1.0f / (x2 - x1) / (y2 - y1) *
-                    (val_ul * (x2 - i) * (y2 - j) +
-                     val_ur * (i - x1) * (y2 - j) +
-                     val_bl * (x2 - i) * (j - y1) +
-                     val_br * (i - x1) * (j - y1));
-            data[j * w + i] = val;
+            uchar val = I.data[j * w + i];
+            int r = 0, g = 0, b = 0;
+            if (val > 0) {
+                uchar val_ul = map[256 * ul + val];
+                uchar val_ur = map[256 * ur + val];
+                uchar val_bl = map[256 * bl + val];
+                uchar val_br = map[256 * br + val];
+                float x1 = idx * tileWidth;
+                float y1 = idy * tileHeight;
+                float x2 = (idx + 1) * tileWidth;
+                float y2 = (idy + 1) * tileHeight;
+                float fval = 1.0f / (x2 - x1) / (y2 - y1) *
+                        (val_ul * (x2 - i) * (y2 - j) +
+                         val_ur * (i - x1) * (y2 - j) +
+                         val_bl * (x2 - i) * (j - y1) +
+                         val_br * (i - x1) * (j - y1));
+                float k = fval / val;
+                r = data[3 * j * w + 3 * i] * k;
+                g = data[3 * j * w + 3 * i + 1] * k;
+                b = data[3 * j * w + 3 * i + 2] * k;
+                if (r > 255 || g > 255 || b > 255)
+                    r = g = b = 255;
+            }
+            data[3 * j * w + 3 * i] = r;
+            data[3 * j * w + 3 * i + 1] = g;
+            data[3 * j * w + 3 * i + 2] = b;
         }
     }
 	delete[] map;
