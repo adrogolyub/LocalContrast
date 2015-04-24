@@ -108,24 +108,6 @@ Mat LocalContrastEnhancer::processAdaptive(bool limitContrast)
         }
     }
 	delete[] map;
-/*
- * debug code to show tile centers
- *
-	for (int i = 0; i < w - 1; i++) {
-        for (int j = 0; j < h - 1; j++) {
-			int idx = i / tileWidth;
-            int idy = j / tileHeight;
-			int x1 = idx * tileWidth;
-            int y1 = idy * tileHeight;
-            int x2 = (idx + 1) * tileWidth;
-            int y2 = (idy + 1) * tileHeight;
-			data[x1 + y1 * w] = 0;
-			data[x1 + y2 * w] = 0;
-			data[x2 + y1 * w] = 0;
-			data[x2 + y2 * w] = 0;
-		}
-	}
-*/
     return result;
 }
 

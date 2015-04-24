@@ -19,7 +19,10 @@ QPixmap Utils::matToPixmap(const Mat &img)
 void Utils::createMap(const Mat &_m, uchar *map, bool limitContrast, float HIST_LIMIT)
 {
     Mat I;
-    cvtColor(_m, I, COLOR_RGB2GRAY);
+    if (_m.channels() == 3)
+        cvtColor(_m, I, COLOR_RGB2GRAY);
+    else
+        I = _m;
     int hist[256];
     int cdf[256];
     memset(hist, 0, 256 * sizeof(int));
@@ -66,23 +69,30 @@ void Utils::createMap(const Mat &_m, uchar *map, bool limitContrast, float HIST_
 
 void Utils::applyMap(uchar *map, Mat &m)
 {
-    Mat I;
-    cvtColor(m, I, COLOR_RGB2GRAY);
     int N = m.cols * m.rows;
     uchar *data = m.data;
-    for (int i = 0; i < N; i++) {
-        int r = 0, g = 0, b = 0;
-        if (I.data[i] > 0) {
-            float k = float(map[I.data[i]]) / I.data[i];
-            r = data[3 * i] * k;
-            g = data[3 * i + 1] * k;
-            b = data[3 * i + 2] * k;
-            if (r > 255 || g > 255 || b > 255)
-                r = g = b = 255;
+    if (m.channels() == 3) {
+        Mat I;
+        cvtColor(m, I, COLOR_RGB2GRAY);
+
+        for (int i = 0; i < N; i++) {
+            int r = 0, g = 0, b = 0;
+            if (I.data[i] > 0) {
+                float k = float(map[I.data[i]]) / I.data[i];
+                r = data[3 * i] * k;
+                g = data[3 * i + 1] * k;
+                b = data[3 * i + 2] * k;
+                if (r > 255 || g > 255 || b > 255)
+                    r = g = b = 255;
+            }
+            data[3 * i] = r;
+            data[3 * i + 1] = g;
+            data[3 * i + 2] = b;
         }
-        data[3 * i] = r;
-        data[3 * i + 1] = g;
-        data[3 * i + 2] = b;
+    }
+    else {
+        for (int i = 0; i < N; i++)
+            data[i] = map[data[i]];
     }
 }
 

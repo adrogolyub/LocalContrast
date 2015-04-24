@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(forceSlider, &QSlider::valueChanged, this, &MainWindow::updateImage);
     connect(modeGroup, SIGNAL(buttonClicked(int)), this, SLOT(updateImage()));
     setWindowState(Qt::WindowMaximized);
+    forceSlider->hide();
 }
 
 void MainWindow::disableGUI(bool t)
@@ -47,6 +48,7 @@ void MainWindow::on_actionOpen_triggered()
 
 void MainWindow::updateImage()
 {
+    forceSlider->setVisible(!rbUniform->isChecked());
     disableGUI(); // to avoid synchronization issues
     _time = steady_clock::now();
     _enhancer->setMode((LocalContrastEnhancer::Mode)(modeGroup->checkedId()));
