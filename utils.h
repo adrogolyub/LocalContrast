@@ -7,7 +7,11 @@
 class Utils
 {
 public:
-    static QPixmap matToPixmap(cv::Mat &img);
+    static QPixmap matToPixmap(const cv::Mat &img);
+    static void applyMap(uchar *map, cv::Mat &m);
+    static void createMap(const cv::Mat &m, uchar *map,
+                          bool limitContrast = false,
+                          float HIST_LIMIT = 1.0f);
 };
 
 #endif // UTILS_H

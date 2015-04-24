@@ -17,6 +17,7 @@ private:
     LocalContrastEnhancer *_enhancer;
     cv::Mat _image;
     QButtonGroup *modeGroup;
+    void disableGUI(bool t = true);
 private slots:
     void onResultReceived(cv::Mat&);
     void updateImage();

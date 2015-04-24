@@ -1,15 +1,17 @@
 #include "localcontrastenhancer.h"
 #include <omp.h>
+#include <utils.h>
 #include <QDebug>
+
 using namespace cv;
 
-#define TILE_XCOUNT 8
-#define TILE_YCOUNT 8
 
-void LocalContrastEnhancer::doWork(cv::Mat &image, float force)
+void LocalContrastEnhancer::doWork(Mat &image, float force)
 {
     _image = image;
     _force = force;    
+	TILE_XCOUNT = 2 + 8 * force;
+	TILE_YCOUNT = 2 + 8 * force;
     start();
 }
 
@@ -25,80 +27,100 @@ void LocalContrastEnhancer::run()
     case AHE:
         result = processAdaptive();
         break;
+    case CLAHE:
+        result = processAdaptive(true);
+        break;
     default:
         result = processUniform();
     }
     emit resultReady(result);
 }
 
-void calcMap(const Mat &m, uchar *map)
+Mat LocalContrastEnhancer::processAdaptive(bool limitContrast)
 {
-    int hist[256];
-    int cdf[256];
-    memset(hist, 0, 256 * sizeof(int));
-    memset(cdf, 0, 256 * sizeof(int));
-    uchar *data = m.data;
-    int w = m.cols, h = m.rows;
-    int N = w * h;
-    for (int i = 0; i < N; i++)
-        hist[data[i]]++;
-    int minColor = -1;
-    int maxColor = -1;
-    for (int i = 0; i < 256; i++)
-        if (hist[i] > 0) {
-            minColor = i;
-            break;
-        }
-    for (int i = 255; i >=0; i--)
-        if (hist[i] > 0) {
-            maxColor = i;
-            break;
-        }
-    cdf[0] = hist[0];
-    for (int i = 1; i < 256; i++)
-        cdf[i] = cdf[i-1] + hist[i];
-    for (int i = 0; i < 256; i++)
-        map[i] = (uchar)(float(cdf[i] - cdf[minColor]) / (N - cdf[minColor]) * 255 + 0.5f);
-}
-
-
-
-Mat LocalContrastEnhancer::processAdaptive()
-{
-    uchar map[256 * TILE_XCOUNT * TILE_YCOUNT];
-
+	float HIST_LIMIT = 1.0f;
+    if (limitContrast) {
+        HIST_LIMIT = 0.2 + _force * 0.8;
+        TILE_XCOUNT = 6;
+        TILE_YCOUNT = 6;
+    }
+    uchar *map = new uchar[256 * TILE_XCOUNT * TILE_YCOUNT];
+    Mat result;
+    int w = _image.cols;
+    int h = _image.rows;
     // each tile is (2 * dx + 1) * (2 * dy + 1)
-    int dx = (_image.cols / TILE_XCOUNT - 1) / 2;
-    int dy = (_image.rows / TILE_YCOUNT - 1) / 2;
+    float tileWidth = (w - 1.0f) / (TILE_XCOUNT - 1);
+    float tileHeight = (h - 1.0f) / (TILE_YCOUNT - 1);
+    int dx = (tileWidth - 1) / 2;
+    int dy = (tileHeight - 1) / 2;
+    copyMakeBorder(_image, result, dy, dy, dx, dx, BORDER_REFLECT101 | BORDER_ISOLATED);
     int tile = 0; // current tile
-    for (int x = dx + 1; x < _image.cols - dx; x += 2 * dx) {
-        for (int y = dy + 1; y < _image.rows - dy; y += 2 * dy) {
+    for (float x = dx; x < result.cols - dx; x += tileWidth) {
+        for (float y = dy; y < result.rows - dy; y += tileHeight) {
             Rect r(x - dx, y - dy, 2 * dx + 1, 2 * dy + 1);
-            Mat m = _image(r);
+            Mat m = result(r);
             uchar *pmap = map + tile * 256;
-			calcMap(m, pmap);
+            Utils::createMap(m, pmap, limitContrast, HIST_LIMIT);
             tile++;
         }
     }
-    Mat result;// = _image.clone();
-    uchar *data = result.data;
 
-    copyMakeBorder(_image, result, dy, dy, dx, dx, BORDER_REFLECT101 | BORDER_ISOLATED);
-    qDebug() << dx << dy;
-    //copyMakeBorder(_image, result, 79, 79, 59, 59, BORDER_REFLECT101 | BORDER_ISOLATED);
+    result = _image.clone();
+    uchar *data = (uchar*)result.data;
+#pragma omp parallel for
+    for (int i = 0; i < w - 1; i++) {
+        for (int j = 0; j < h - 1; j++) {
+            // tiles indices
+            int idx = i / tileWidth;
+            int idy = j / tileHeight;
+            int ul = idx * TILE_YCOUNT + idy;
+            int ur = (idx + 1) * TILE_YCOUNT + idy;
+            int bl = idx * TILE_YCOUNT + idy + 1;
+            int br = (idx + 1) * TILE_YCOUNT + idy + 1;
+            uchar val = data[j * w + i];
+            uchar val_ul = map[256 * ul + val];
+            uchar val_ur = map[256 * ur + val];
+            uchar val_bl = map[256 * bl + val];
+            uchar val_br = map[256 * br + val];
+            float x1 = idx * tileWidth;
+            float y1 = idy * tileHeight;
+            float x2 = (idx + 1) * tileWidth;
+            float y2 = (idy + 1) * tileHeight;
+            val = 1.0f / (x2 - x1) / (y2 - y1) *
+                    (val_ul * (x2 - i) * (y2 - j) +
+                     val_ur * (i - x1) * (y2 - j) +
+                     val_bl * (x2 - i) * (j - y1) +
+                     val_br * (i - x1) * (j - y1));
+            data[j * w + i] = val;
+        }
+    }
+	delete[] map;
+/*
+ * debug code to show tile centers
+ *
+	for (int i = 0; i < w - 1; i++) {
+        for (int j = 0; j < h - 1; j++) {
+			int idx = i / tileWidth;
+            int idy = j / tileHeight;
+			int x1 = idx * tileWidth;
+            int y1 = idy * tileHeight;
+            int x2 = (idx + 1) * tileWidth;
+            int y2 = (idy + 1) * tileHeight;
+			data[x1 + y1 * w] = 0;
+			data[x1 + y2 * w] = 0;
+			data[x2 + y1 * w] = 0;
+			data[x2 + y2 * w] = 0;
+		}
+	}
+*/
     return result;
 }
 
 Mat LocalContrastEnhancer::processUniform()
 {    
     Mat result = _image.clone();
-    uchar *data = result.data;    
-    int N = result.cols * result.rows;
     uchar map[256];
-
-    calcMap(_image, map);
-//#pragma omp parallel for
-    for (int i = 0; i < N; i++)
-        data[i] = map[data[i]];
+    Utils::createMap(_image, map);
+    Utils::applyMap(map, result);
     return result;
 }

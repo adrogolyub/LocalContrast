@@ -3,19 +3,23 @@
 
 #include <QThread>
 #include <opencv2/opencv.hpp>
+#include <QMutex>
 
 class LocalContrastEnhancer : public QThread
 {
     Q_OBJECT
 public:
-    enum Mode { Uniform = 1, AHE };
-    explicit LocalContrastEnhancer(QObject *parent = 0) {}
+    enum Mode { Uniform = 1, AHE, CLAHE };
+    explicit LocalContrastEnhancer(QObject *) {}
     void doWork(cv::Mat &image, float force);
     void setMode(Mode);
 protected:
-    cv::Mat processAdaptive();
+	uchar *map;
+    QMutex _mutex;
+    cv::Mat processAdaptive(bool limitContrast = false);
     cv::Mat processUniform();
-
+	int TILE_XCOUNT;
+	int TILE_YCOUNT;
     float _force;
     cv::Mat _image;
     Mode _mode;
