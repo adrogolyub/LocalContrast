@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "utils.h"
 #include <QFileDialog>
-#include <QDebug>
 #include <QStatusBar>
 #include <QButtonGroup>
 #include <QMessageBox>

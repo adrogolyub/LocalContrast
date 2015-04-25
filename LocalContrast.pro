@@ -12,8 +12,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 message($$LIBS))
 TARGET = LocalContrast
-TEMPLATE = app
-QTPLUGIN     += qjpeg qpng qbmp
+TEMPLATE = vcapp
+QTPLUGIN     += qpng
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -28,3 +28,5 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     resource.qrc
+OTHER_FILES += app.rc
+RC_FILE = app.rc
