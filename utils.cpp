@@ -11,7 +11,7 @@ QPixmap Utils::matToPixmap(const Mat &img)
     else if (img.channels() == 4)
         cvtColor(img, mat, COLOR_BGRA2RGBA);
     else
-        cvtColor(img, mat, COLOR_BGR2RGBA);
+        cvtColor(img, mat, COLOR_RGB2RGBA);
     QPixmap res = QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, QImage::Format_ARGB32));
     return res;
 }
