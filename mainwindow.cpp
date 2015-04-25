@@ -45,15 +45,10 @@ void MainWindow::on_actionOpen_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open image"), QString(), tr("Images (*.png *.bmp *.jpg)"));
     if (fileName.isEmpty())
         return;
-
-    _image = imread(fileName.toLatin1().data(), IMREAD_COLOR);
-    imageLeft->setPixmap(Utils::matToPixmap(_image));
-    cvtColor(_image,_image, COLOR_BGR2Lab);
-    vector<Mat> channels;
-    split(_image, channels);
-    Mat tmp = channels[0];
-    cvtColor(tmp, tmp, COLOR_GRAY2RGB);
-
+    Mat image = imread(fileName.toLatin1().data(), IMREAD_COLOR);
+    imageLeft->setPixmap(Utils::matToPixmap(image));
+    cvtColor(image, image, COLOR_BGR2Lab);
+    split(image, _splitLabImage);
     updateImage();
 }
 
@@ -63,7 +58,7 @@ void MainWindow::updateImage()
     disableGUI(); // to avoid synchronization issues
     _time = steady_clock::now();
     _enhancer->setMode((LocalContrastEnhancer::Mode)(modeGroup->checkedId()));
-    _enhancer->doWork(_image, forceSlider->value() / (float)forceSlider->maximum());
+    _enhancer->doWork(_splitLabImage[0], forceSlider->value() / (float)forceSlider->maximum());
 }
 
 void MainWindow::onResultReceived(Mat &res)
@@ -71,15 +66,11 @@ void MainWindow::onResultReceived(Mat &res)
     long long elapsed =  duration_cast<milliseconds>(steady_clock::now() - _time).count();
     QMainWindow::statusBar()->showMessage(tr("%1 msec").arg(elapsed));
 
-    vector<Mat> ch1, ch2;
-    split(res, ch1);
-    res = ch1[0];
-    ch1.clear();
-    split(_image, ch2);
-    ch1.push_back(res);
-    ch1.push_back(ch2[1]);
-    ch1.push_back(ch2[2]);
-    merge(ch1, res);
+    vector<Mat> ch;
+    ch.push_back(res);
+    ch.push_back(_splitLabImage[1]);
+    ch.push_back(_splitLabImage[2]);
+    merge(ch, res);
     cvtColor(res, res, COLOR_Lab2BGR);
     lastResult = Utils::matToPixmap(res);
     imageRight->setPixmap(lastResult);
