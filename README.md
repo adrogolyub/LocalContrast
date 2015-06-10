@@ -18,3 +18,5 @@ Workflow is demonstrated in video available from https://www.dropbox.com/s/i40tn
 
 Possible improvements:
 1. Use Gradient Domain-based approach with Poisson equation (as in single image Pseudo-HDR)
+2. Use OpenCL for processing
+3. Compare CLAHE performance with version provided in OpenCV
