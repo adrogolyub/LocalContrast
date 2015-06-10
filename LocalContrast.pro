@@ -12,7 +12,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 message($$LIBS))
 TARGET = LocalContrast
-TEMPLATE = vcapp
+TEMPLATE = app
 QTPLUGIN     += qpng
 
 SOURCES += main.cpp\
@@ -25,6 +25,8 @@ HEADERS  += mainwindow.h \
     utils.h
 
 FORMS    += mainwindow.ui
+
+QMAKE_CXXFLAGS += -std=c++11
 
 RESOURCES += \
     resource.qrc
