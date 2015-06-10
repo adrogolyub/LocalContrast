@@ -15,6 +15,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
 private:    
     std::vector<cv::Mat> _splitLabImage;
+    cv::Mat _image;
     std::chrono::steady_clock::time_point _time;
     LocalContrastEnhancer *_enhancer;
     //cv::Mat _image;

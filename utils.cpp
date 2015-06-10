@@ -7,12 +7,12 @@ QPixmap Utils::matToPixmap(const Mat &img)
 {
     Mat mat;
     if (img.channels() == 1)
-        cvtColor(img, mat, COLOR_GRAY2RGBA);
+        cvtColor(img, mat, COLOR_GRAY2RGB);
     else if (img.channels() == 4)
-        cvtColor(img, mat, COLOR_BGRA2RGBA);
+        cvtColor(img, mat, COLOR_BGRA2RGB);
     else
-        cvtColor(img, mat, COLOR_RGB2RGBA);
-    QPixmap res = QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32));
+        cvtColor(img, mat, COLOR_RGB2BGR);
+    QPixmap res = QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888));
     return res;
 }
 

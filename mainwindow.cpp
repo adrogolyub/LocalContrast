@@ -44,8 +44,9 @@ void MainWindow::on_actionOpen_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open image"), QString(), tr("Images (*.png *.bmp *.jpg)"));
     if (fileName.isEmpty())
         return;
-    Mat image = imread(fileName.toLatin1().data(), IMREAD_COLOR);
-    imageLeft->setPixmap(Utils::matToPixmap(image));
+    _image = imread(fileName.toLatin1().data(), IMREAD_COLOR);
+    imageLeft->setPixmap(Utils::matToPixmap(_image));
+    Mat image = _image.clone();
     cvtColor(image, image, COLOR_BGR2Lab);
     split(image, _splitLabImage);
     updateImage();
