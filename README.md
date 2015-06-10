@@ -10,7 +10,7 @@ RGB weighted sum tends to produce artifacts).
 
 Application uses qt.conf to deploy on machines without Qt installed.
 
-Tested with Qt 5.1 and OpenCV 2.4.9 on Windows 7. 
+Tested with Qt 5.1 and OpenCV 2.4.9 on Windows 7. Had some issues running on Windows 8. 
 
 To build application one should edit opencv.pri according to target OpenCV version and path.
 
