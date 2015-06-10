@@ -12,7 +12,7 @@ QPixmap Utils::matToPixmap(const Mat &img)
         cvtColor(img, mat, COLOR_BGRA2RGBA);
     else
         cvtColor(img, mat, COLOR_RGB2RGBA);
-    QPixmap res = QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, QImage::Format_ARGB32));
+    QPixmap res = QPixmap::fromImage(QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32));
     return res;
 }
 
